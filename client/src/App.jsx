@@ -1,23 +1,3 @@
-          <label className="full search-bar">
-            Search cancellations
-            <div className="combo-input">
-              <input
-                type="search"
-                placeholder="Type customer name, email, reason, closer..."
-                value={filters.query || ''}
-                onChange={(e) => handleFilterChange('query', e.target.value)}
-              />
-              {filters.query && (
-                <button
-                  type="button"
-                  className="chip ghost clear"
-                  onClick={() => handleFilterChange('query', '')}
-                >
-                  Clear
-                </button>
-              )}
-            </div>
-          </label>
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
@@ -193,6 +173,7 @@ function App() {
     if (filters.reason) query.append('reason', filters.reason);
     if (filters.saved === 'saved') query.append('saved', 'true');
     if (filters.saved === 'lost') query.append('saved', 'false');
+    if (filters.query) query.append('query', filters.query);
     return query.toString();
   }, [filters]);
 
@@ -624,6 +605,26 @@ function App() {
         </button>
             }
           >
+            <label className="full search-bar">
+              Search cancellations
+              <div className="combo-input">
+                <input
+                  type="search"
+                  placeholder="Type customer name, email, reason, closer..."
+                  value={filters.query || ''}
+                  onChange={(e) => handleFilterChange('query', e.target.value)}
+                />
+                {filters.query && (
+                  <button
+                    type="button"
+                    className="chip ghost clear"
+                    onClick={() => handleFilterChange('query', '')}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </label>
             <div className="filter-grid">
               <label>
                 Start date
