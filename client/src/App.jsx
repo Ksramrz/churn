@@ -17,7 +17,18 @@ import './App.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
-const palette = ['#6246ea', '#f06f51', '#ffc857', '#2a9d8f', '#8ac926', '#ff595e', '#1982c4'];
+const palette = ['#6c63ff', '#ff7b72', '#fec260', '#2a9d8f', '#8ac926', '#ff595e', '#1982c4'];
+
+const defaultAgentTypes = ['Realtor', 'Mortgage Broker', 'Insurance Advisor', 'Financial Advisor'];
+
+const reasonPresets = [
+  'Content not relevant',
+  'Not getting results',
+  'Pricing objection',
+  'Lead quality concerns',
+  'No time to focus',
+  'Switched to competitor'
+];
 
 const defaultFilters = {
   startDate: '',
@@ -115,7 +126,12 @@ function App() {
   const [filters, setFilters] = useState(defaultFilters);
   const [formData, setFormData] = useState(defaultForm);
   const [customers, setCustomers] = useState([]);
-  const [options, setOptions] = useState({ closers: [], segments: [], reasons: [] });
+  const [options, setOptions] = useState({
+    closers: [],
+    segments: [],
+    reasons: [],
+    agentTypes: defaultAgentTypes
+  });
   const [cancellations, setCancellations] = useState([]);
   const [overview, setOverview] = useState(null);
   const [reasonData, setReasonData] = useState({ overall: [], bySegment: {} });
@@ -133,7 +149,11 @@ function App() {
         fetchJson('/metadata/options'),
         fetchJson('/customers')
       ]);
-      setOptions(metadata);
+      setOptions((prev) => ({
+        ...prev,
+        ...metadata,
+        agentTypes: metadata.agentTypes?.length ? metadata.agentTypes : defaultAgentTypes
+      }));
       setCustomers(customerList);
       setFormData((prev) => ({
         ...prev,
@@ -198,20 +218,40 @@ function App() {
     setFilters((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleCustomerInput = (value) => {
-    setFormData((prev) => {
-      const match =
-        customers.find(
-          (customer) =>
-            `${customer.name} (${customer.email})` === value || String(customer.id) === value
-        ) || null;
+  const clearCustomerSelection = () => {
+    setFormData((prev) => ({
+      ...prev,
+      customer_id: '',
+      customerLookup: ''
+    }));
+  };
 
-      return {
-        ...prev,
-        customerLookup: value,
-        customer_id: match ? match.id : ''
-      };
-    });
+  const handleCustomerInput = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      customerLookup: value,
+      customer_id: ''
+    }));
+  };
+
+  const customerSuggestions = useMemo(() => {
+    if (!formData.customerLookup || formData.customer_id) return [];
+    const lookup = formData.customerLookup.toLowerCase();
+    return customers
+      .filter(
+        (customer) =>
+          customer.name.toLowerCase().includes(lookup) ||
+          customer.email.toLowerCase().includes(lookup)
+      )
+      .slice(0, 5);
+  }, [customers, formData.customerLookup]);
+
+  const selectCustomer = (customer) => {
+    setFormData((prev) => ({
+      ...prev,
+      customer_id: customer.id,
+      customerLookup: `${customer.name} (${customer.email})`
+    }));
   };
 
   const handleFormChange = (field, value) => {
@@ -362,21 +402,33 @@ function App() {
             <form onSubmit={handleFormSubmit} className="form-grid">
               <label>
                 Customer
-                <input
-                  list="customers"
-                  value={formData.customerLookup}
-                  onChange={(e) => handleCustomerInput(e.target.value)}
-                  placeholder="Start typing customer name"
-                />
-                <datalist id="customers">
-                  {customers.map((customer) => (
-                    <option
-                      key={customer.id}
-                      value={`${customer.name} (${customer.email})`}
-                      data-id={customer.id}
-                    />
-                  ))}
-                </datalist>
+                <div className="combo-input">
+                  <input
+                    value={formData.customerLookup}
+                    onChange={(e) => handleCustomerInput(e.target.value)}
+                    placeholder="Type name or email"
+                  />
+                  {formData.customerLookup && (
+                    <button
+                      type="button"
+                      className="chip ghost clear"
+                      aria-label="Clear customer"
+                      onClick={clearCustomerSelection}
+                    >
+                      ×
+                    </button>
+                  )}
+                </div>
+                {customerSuggestions.length > 0 && (
+                  <ul className="suggestions">
+                    {customerSuggestions.map((customer) => (
+                      <li key={customer.id} onClick={() => selectCustomer(customer)}>
+                        <span>{customer.name}</span>
+                        <small>{customer.email}</small>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </label>
 
               <label>
@@ -405,16 +457,22 @@ function App() {
               <label>
                 Primary reason
                 <input
-                  list="reasons"
                   value={formData.primary_reason}
                   onChange={(e) => handleFormChange('primary_reason', e.target.value)}
                   placeholder="Content not relevant, Not getting results..."
                 />
-                <datalist id="reasons">
-                  {options.reasons?.map((reason) => (
-                    <option key={reason} value={reason} />
+                <div className="chip-group">
+                  {(options.reasons?.length ? options.reasons : reasonPresets).slice(0, 6).map((reason) => (
+                    <button
+                      type="button"
+                      key={reason}
+                      className={`chip ${formData.primary_reason === reason ? 'active' : ''}`}
+                      onClick={() => handleFormChange('primary_reason', reason)}
+                    >
+                      {reason}
+                    </button>
                   ))}
-                </datalist>
+                </div>
               </label>
 
               <label className="full">
@@ -563,13 +621,13 @@ function App() {
                 </select>
               </label>
               <label>
-                Segment
+                Agent type
                 <select
                   value={filters.segment}
                   onChange={(e) => handleFilterChange('segment', e.target.value)}
                 >
-                  <option value="">All segments</option>
-                  {options.segments?.map((segment) => (
+                  <option value="">All agent types</option>
+                  {options.agentTypes?.map((segment) => (
                     <option key={segment} value={segment}>
                       {segment}
                     </option>
@@ -583,7 +641,7 @@ function App() {
                   onChange={(e) => handleFilterChange('reason', e.target.value)}
                 >
                   <option value="">All reasons</option>
-                  {options.reasons?.map((reason) => (
+                  {(options.reasons?.length ? options.reasons : reasonPresets).map((reason) => (
                     <option key={reason} value={reason}>
                       {reason}
                     </option>

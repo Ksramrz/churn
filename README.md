@@ -3,21 +3,24 @@
 Internal, test-environment tool for Roomvu operations teams to capture cancellation calls, surface descriptive churn insights, and export retention-ready reports.
 
 ### Project Structure
-- `server/` — Node.js + Express API with SQLite storage, PDF + CSV exports, and a rules-based insight engine.
+- `server/` — Node.js + Express API with Postgres storage, PDF + CSV exports, and a rules-based insight engine.
 - `client/` — React (Vite) admin portal with intake form, filters, dashboard charts, and exports UI.
 
 ---
 
-### Backend Setup (Node + SQLite)
+### Backend Setup (Node + Postgres)
 1. `cd /Users/top/Desktop/churn/server`
 2. Install dependencies once: `npm install`
-3. Seed the local SQLite database with Roomvu sample data: `npm run seed`
-4. Start the API (default port 4000): `npm run dev`
-5. Key endpoints are documented inline in `server/src/index.js` (cancellations CRUD, stats, exports, insights, metadata).
+3. Ensure a Postgres database is available (local `postgresql://postgres:postgres@localhost:5432/roomvu`, Supabase, Render Managed Postgres, etc.).
+   - Local quick start: `createdb roomvu` (macOS) or `docker run --name roomvu-pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16`.
+4. Set `DATABASE_URL` (e.g., `export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/roomvu`).
+5. Seed the database with Roomvu sample data: `npm run seed`
+6. Start the API (default port 4000): `npm run dev`
+7. Key endpoints are documented inline in `server/src/index.js` (cancellations CRUD, stats, exports, insights, metadata).
 
 **Configuring teammates (closers):** update `ROOMVU_CLOSERS` inside `server/src/config.js`, then restart the server. The change automatically flows to dropdowns, stats, and insights.
 
-**Database location:** SQLite file lives at `server/data/roomvu.db`. Delete this file and rerun `npm run seed` to reset.
+**Database connection:** The backend reads `process.env.DATABASE_URL`. Render, Supabase, Neon, or any other managed Postgres URL will work; SSL is enabled automatically when `NODE_ENV=production`.
 
 ---
 
@@ -64,7 +67,7 @@ Internal, test-environment tool for Roomvu operations teams to capture cancellat
 ### Common Troubleshooting
 - **Port already in use:** Adjust `PORT` env variable before starting the server, or stop existing service on 4000.
 - **CORS errors in UI:** Ensure the backend is running locally; otherwise, set `VITE_API_BASE` to the reachable API URL.
-- **Missing customers in autocomplete:** Rerun `npm run seed` or insert new customers via SQLite, then refresh the UI.
+- **Missing customers in autocomplete:** Rerun `npm run seed` or insert new customers via Postgres, then refresh the UI.
 - **Charts look empty:** Filters may be overly restrictive. Use the “Clear” action in the filter card to reset.
 - **PDF export hangs:** Confirm the `/exports/monthly-report.pdf` endpoint is reachable; server logs will note any PDFKit issues.
 
@@ -74,4 +77,19 @@ Internal, test-environment tool for Roomvu operations teams to capture cancellat
 - The system is intentionally descriptive—no predictive or ML models are included.
 - Activity logs table is provisioned for future Roomvu engagement analytics.
 - All code aims for clarity so Roomvu ops can maintain or extend quickly on a non-production environment.
+
+---
+
+### Render Deployment Tips
+- **Backend Web Service**
+  - Root directory: `server`
+  - Build command: `npm install && npm run seed`
+  - Start command: `npm run start`
+  - Provision a free Render PostgreSQL instance and copy its internal connection string into a service env var named `DATABASE_URL`.
+  - No persistent disk needed—the managed Postgres stores all churn data.
+- **Frontend Static Site**
+  - Root directory: `client`
+  - Build command: `npm install && npm run build`
+  - Publish directory: `dist`
+  - Add `VITE_API_BASE=https://<your-backend>.onrender.com` once the API is live.
 

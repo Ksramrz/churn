@@ -1,5 +1,4 @@
-const dayjs = require('dayjs');
-const db = require('./db');
+const { pool, runMigrations } = require('./db');
 const { ROOMVU_CLOSERS } = require('./config');
 const { calculateDaysOnPlatform, normalizeReason } = require('./utils');
 
@@ -118,102 +117,108 @@ const activityLogs = [
   { customerIndex: 4, last_active_date: '2025-02-16', engagement_level: 'medium' }
 ];
 
-const seed = () => {
-  const customerCount = db.prepare('SELECT COUNT(*) as count FROM customers').get().count;
-  if (!customerCount) {
-    const insertCustomer = db.prepare(`
-      INSERT INTO customers (name, email, segment, subscription_start_date, source_campaign)
-      VALUES (@name, @email, @segment, @subscription_start_date, @source_campaign)
-    `);
-    const insertLog = db.prepare(`
-      INSERT INTO activity_logs (customer_id, last_active_date, engagement_level)
-      VALUES (@customer_id, @last_active_date, @engagement_level)
-    `);
+const seed = async () => {
+  await runMigrations();
 
-    customers.forEach((customer, index) => {
-      const result = insertCustomer.run(customer);
+  const customerCountResult = await pool.query('SELECT COUNT(*)::int as count FROM customers');
+  let hydratedCustomers = [];
+
+  if (!customerCountResult.rows[0].count) {
+    for (let index = 0; index < customers.length; index += 1) {
+      const customer = customers[index];
+      const result = await pool.query(
+        `
+          INSERT INTO customers (name, email, segment, subscription_start_date, source_campaign)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING *
+        `,
+        [
+          customer.name,
+          customer.email,
+          customer.segment,
+          customer.subscription_start_date,
+          customer.source_campaign
+        ]
+      );
+
+      const inserted = result.rows[0];
+      hydratedCustomers[index] = inserted;
+
       const log = activityLogs.find((logEntry) => logEntry.customerIndex === index);
       if (log) {
-        insertLog.run({
-          customer_id: result.lastInsertRowid,
-          last_active_date: log.last_active_date,
-          engagement_level: log.engagement_level
-        });
+        await pool.query(
+          `
+            INSERT INTO activity_logs (customer_id, last_active_date, engagement_level)
+            VALUES ($1, $2, $3)
+          `,
+          [inserted.id, log.last_active_date, log.engagement_level]
+        );
       }
-      customers[index].id = result.lastInsertRowid;
-    });
+    }
   } else {
-    const rows = db.prepare('SELECT * FROM customers ORDER BY id').all();
-    rows.forEach((row, index) => {
-      customers[index] = { ...row };
-    });
+    const existing = await pool.query('SELECT * FROM customers ORDER BY id');
+    hydratedCustomers = existing.rows;
   }
 
-  const cancellationCount = db.prepare('SELECT COUNT(*) as count FROM cancellations').get().count;
-  if (!cancellationCount) {
-    const insertCancellation = db.prepare(`
-      INSERT INTO cancellations (
-        customer_id,
-        cancellation_date,
-        primary_reason,
-        secondary_notes,
-        usage_downloads,
-        usage_posts,
-        usage_logins,
-        usage_minutes,
-        days_on_platform,
-        closer_name,
-        saved_flag,
-        saved_by,
-        save_reason,
-        save_notes
-      ) VALUES (
-        @customer_id,
-        @cancellation_date,
-        @primary_reason,
-        @secondary_notes,
-        @usage_downloads,
-        @usage_posts,
-        @usage_logins,
-        @usage_minutes,
-        @days_on_platform,
-        @closer_name,
-        @saved_flag,
-        @saved_by,
-        @save_reason,
-        @save_notes
-      )
-    `);
+  const cancellationCountResult = await pool.query('SELECT COUNT(*)::int as count FROM cancellations');
+  if (!cancellationCountResult.rows[0].count) {
+    for (const template of cancellationTemplates) {
+      const customer = hydratedCustomers[template.customerIndex];
+      if (!customer) continue;
 
-    cancellationTemplates.forEach((template) => {
-      const customer = customers[template.customerIndex];
-      if (!customer) return;
-      insertCancellation.run({
-        customer_id: customer.id,
-        cancellation_date: template.cancellation_date,
-        primary_reason: normalizeReason(template.primary_reason),
-        secondary_notes: template.secondary_notes,
-        usage_downloads: template.usage_downloads,
-        usage_posts: template.usage_posts,
-        usage_logins: template.usage_logins,
-        usage_minutes: template.usage_minutes,
-        days_on_platform: calculateDaysOnPlatform(
-          customer.subscription_start_date,
-          template.cancellation_date
-        ),
-        closer_name: template.closer_name || ROOMVU_CLOSERS[0],
-        saved_flag: template.saved_flag ? 1 : 0,
-        saved_by: template.saved_by || null,
-        save_reason: template.save_reason || null,
-        save_notes: template.save_notes || null
-      });
-    });
+      await pool.query(
+        `
+          INSERT INTO cancellations (
+            customer_id,
+            cancellation_date,
+            primary_reason,
+            secondary_notes,
+            usage_downloads,
+            usage_posts,
+            usage_logins,
+            usage_minutes,
+            days_on_platform,
+            closer_name,
+            saved_flag,
+            saved_by,
+            save_reason,
+            save_notes
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+          )
+        `,
+        [
+          customer.id,
+          template.cancellation_date,
+          normalizeReason(template.primary_reason),
+          template.secondary_notes,
+          template.usage_downloads,
+          template.usage_posts,
+          template.usage_logins,
+          template.usage_minutes,
+          calculateDaysOnPlatform(customer.subscription_start_date, template.cancellation_date),
+          template.closer_name || ROOMVU_CLOSERS[0],
+          Boolean(template.saved_flag),
+          template.saved_by || null,
+          template.save_reason || null,
+          template.save_notes || null
+        ]
+      );
+    }
   }
 
   console.log('Roomvu churn DB ready.');
 };
 
-seed();
+seed()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error('Failed to seed Roomvu DB', error);
+    process.exit(1);
+  })
+  .finally(() => {
+    pool.end();
+  });
 
 module.exports = seed;
 
