@@ -1,3 +1,23 @@
+          <label className="full search-bar">
+            Search cancellations
+            <div className="combo-input">
+              <input
+                type="search"
+                placeholder="Type customer name, email, reason, closer..."
+                value={filters.query || ''}
+                onChange={(e) => handleFilterChange('query', e.target.value)}
+              />
+              {filters.query && (
+                <button
+                  type="button"
+                  className="chip ghost clear"
+                  onClick={() => handleFilterChange('query', '')}
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+          </label>
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
 import {
@@ -433,16 +453,31 @@ function App() {
 
               <label>
                 Closer
-                <select
+                <input
                   value={formData.closer_name}
                   onChange={(e) => handleFormChange('closer_name', e.target.value)}
-                >
+                  placeholder="Type or pick a Roomvu teammate"
+                  list="closerOptions"
+                />
+                <datalist id="closerOptions">
                   {options.closers?.map((closer) => (
-                    <option key={closer} value={closer}>
-                      {closer}
-                    </option>
+                    <option key={closer} value={closer} />
                   ))}
-                </select>
+                </datalist>
+                {!formData.closer_name && (
+                  <div className="chip-group">
+                    {options.closers?.slice(0, 4).map((closer) => (
+                      <button
+                        type="button"
+                        key={closer}
+                        className="chip ghost"
+                        onClick={() => handleFormChange('closer_name', closer)}
+                      >
+                        {closer}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </label>
 
               <label>
@@ -567,7 +602,7 @@ function App() {
                 <button type="submit" disabled={formSubmitting}>
                   {formSubmitting ? 'Saving...' : 'Log cancellation'}
                 </button>
-              </div>
+      </div>
             </form>
           </Card>
           <Card title="Insights">
@@ -586,7 +621,7 @@ function App() {
             actions={
               <button className="ghost" onClick={() => setFilters(defaultFilters)}>
                 Clear
-              </button>
+        </button>
             }
           >
             <div className="filter-grid">

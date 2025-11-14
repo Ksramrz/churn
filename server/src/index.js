@@ -60,6 +60,19 @@ const buildFilterClause = (query) => {
     filters.push('can.saved_flag = FALSE');
   }
 
+  if (query.query) {
+    const terms = query.query
+      .split(/\s+/)
+      .map((term) => term.trim())
+      .filter(Boolean);
+    terms.forEach((term) => {
+      values.push(`%${term.toLowerCase()}%`);
+      filters.push(
+        `(LOWER(cust.name) LIKE $${values.length} OR LOWER(cust.email) LIKE $${values.length} OR LOWER(can.primary_reason) LIKE $${values.length} OR LOWER(can.closer_name) LIKE $${values.length})`
+      );
+    });
+  }
+
   return {
     clause: filters.length ? `WHERE ${filters.join(' AND ')}` : '',
     values
