@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import dayjs from 'dayjs';
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
@@ -8,6 +10,8 @@ import {
   Legend,
   Pie,
   PieChart,
+  RadialBar,
+  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -45,7 +49,10 @@ const DashboardPage = () => {
     []
   );
 
-  const reasonPieData = reasonData?.overall || [];
+  const reasonPieData = (reasonData?.overall || []).map((entry, index) => ({
+    ...entry,
+    fill: palette[index % palette.length]
+  }));
   const stackedConfig = useMemo(() => {
     const bySegment = reasonData?.bySegment || {};
     const reasonsSet = new Set();
@@ -237,23 +244,24 @@ const DashboardPage = () => {
         <Card title="Cancellations by reason">
           <div className="chart">
             {reasonPieData.length ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={reasonPieData}
+              <ResponsiveContainer width="100%" height={280}>
+                <RadialBarChart
+                  innerRadius="20%"
+                  outerRadius="100%"
+                  barSize={18}
+                  data={reasonPieData}
+                  startAngle={90}
+                  endAngle={-270}
+                >
+                  <RadialBar
+                    minAngle={15}
+                    label={{ position: 'insideStart', fill: '#fff', fontSize: 12 }}
+                    background
                     dataKey="value"
-                    nameKey="label"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={3}
-                  >
-                    {reasonPieData.map((entry, index) => (
-                      <Cell key={entry.label} fill={palette[index % palette.length]} />
-                    ))}
-                  </Pie>
+                  />
+                  <Legend iconType="circle" layout="vertical" verticalAlign="middle" align="right" />
                   <Tooltip />
-                  <Legend />
-                </PieChart>
+                </RadialBarChart>
               </ResponsiveContainer>
             ) : (
               <p className="empty-state">No data yet</p>
@@ -261,17 +269,30 @@ const DashboardPage = () => {
           </div>
         </Card>
 
-        <Card title="Cancellations by month">
+        <Card title="Cancellations trend">
           <div className="chart">
             {monthlyChartData.length ? (
               <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={monthlyChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
+                <AreaChart data={monthlyChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="churnGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6246ea" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#6246ea" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                   <XAxis dataKey="month" />
-                  <YAxis />
+                  <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Bar dataKey="cancellations" fill="#6246ea" radius={[4, 4, 0, 0]} />
-                </BarChart>
+                  <Area
+                    type="monotone"
+                    dataKey="cancellations"
+                    stroke="#6246ea"
+                    strokeWidth={3}
+                    fillOpacity={1}
+                    fill="url(#churnGradient)"
+                  />
+                </AreaChart>
               </ResponsiveContainer>
             ) : (
               <p className="empty-state">No data yet</p>

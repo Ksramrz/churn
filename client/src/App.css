@@ -403,6 +403,10 @@ button.ghost {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #fdfdff;
+  border-radius: 14px;
+  border: 1px solid rgba(99, 102, 241, 0.08);
+  padding: 0.5rem;
 }
 
 .table-wrapper {
