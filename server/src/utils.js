@@ -38,7 +38,11 @@ const mapCancellationRow = (row) => ({
   saved_flag: Boolean(row.saved_flag),
   saved_by: row.saved_by,
   save_reason: row.save_reason,
-  save_notes: row.save_notes
+  save_notes: row.save_notes,
+  zoho_ticket_url: row.zoho_ticket_url,
+  churn_amount: row.churn_amount,
+  agent_plan: row.agent_plan,
+  saved_revenue: row.saved_revenue
 });
 
 const toCsv = (rows) => {

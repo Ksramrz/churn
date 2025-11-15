@@ -41,7 +41,11 @@ const runMigrations = async () => {
       saved_flag BOOLEAN DEFAULT FALSE,
       saved_by TEXT,
       save_reason TEXT,
-      save_notes TEXT
+      save_notes TEXT,
+      zoho_ticket_url TEXT,
+      churn_amount NUMERIC,
+      agent_plan TEXT,
+      saved_revenue NUMERIC
     );
   `);
 
@@ -57,6 +61,11 @@ const runMigrations = async () => {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_cancellations_customer_id ON cancellations(customer_id);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_cancellations_reason ON cancellations(primary_reason);`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_cancellations_date ON cancellations(cancellation_date);`);
+
+  await pool.query(`ALTER TABLE cancellations ADD COLUMN IF NOT EXISTS zoho_ticket_url TEXT;`);
+  await pool.query(`ALTER TABLE cancellations ADD COLUMN IF NOT EXISTS churn_amount NUMERIC;`);
+  await pool.query(`ALTER TABLE cancellations ADD COLUMN IF NOT EXISTS agent_plan TEXT;`);
+  await pool.query(`ALTER TABLE cancellations ADD COLUMN IF NOT EXISTS saved_revenue NUMERIC;`);
 };
 
 module.exports = {

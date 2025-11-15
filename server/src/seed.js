@@ -51,7 +51,10 @@ const cancellationTemplates = [
     usage_logins: 3,
     usage_minutes: 45,
     closer_name: 'Ava Liang',
-    saved_flag: 0
+    saved_flag: 0,
+    agent_plan: 'Premium Monthly',
+    churn_amount: 149,
+    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1000'
   },
   {
     customerIndex: 1,
@@ -66,7 +69,11 @@ const cancellationTemplates = [
     saved_flag: 1,
     saved_by: 'Priya Shah',
     save_reason: 'Extended onboarding',
-    save_notes: 'Scheduled weekly accountability check-in'
+    save_notes: 'Scheduled weekly accountability check-in',
+    agent_plan: 'Basic Monthly',
+    churn_amount: 79,
+    saved_revenue: 59,
+    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1001'
   },
   {
     customerIndex: 2,
@@ -78,7 +85,9 @@ const cancellationTemplates = [
     usage_logins: 7,
     usage_minutes: 110,
     closer_name: 'Marcus Lee',
-    saved_flag: 0
+    saved_flag: 0,
+    agent_plan: 'Premium Yearly',
+    churn_amount: 899
   },
   {
     customerIndex: 3,
@@ -90,7 +99,10 @@ const cancellationTemplates = [
     usage_logins: 1,
     usage_minutes: 12,
     closer_name: 'Hannah Cho',
-    saved_flag: 0
+    saved_flag: 0,
+    agent_plan: 'Diamond 6 Month',
+    churn_amount: 1299,
+    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1002'
   },
   {
     customerIndex: 4,
@@ -105,7 +117,11 @@ const cancellationTemplates = [
     saved_flag: 1,
     saved_by: 'Noah Patel',
     save_reason: 'Customized content pack',
-    save_notes: 'Provided Seattle starter kit'
+    save_notes: 'Provided Seattle starter kit',
+    agent_plan: 'Platinum Yearly',
+    churn_amount: 1599,
+    saved_revenue: 800,
+    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1003'
   }
 ];
 
@@ -182,9 +198,13 @@ const seed = async () => {
             saved_flag,
             saved_by,
             save_reason,
-            save_notes
+            save_notes,
+            zoho_ticket_url,
+            churn_amount,
+            agent_plan,
+            saved_revenue
           ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
           )
         `,
         [
@@ -201,7 +221,11 @@ const seed = async () => {
           Boolean(template.saved_flag),
           template.saved_by || null,
           template.save_reason || null,
-          template.save_notes || null
+          template.save_notes || null,
+          template.zoho_ticket_url || null,
+          template.churn_amount || null,
+          template.agent_plan || 'Basic Monthly',
+          template.saved_revenue || null
         ]
       );
     }

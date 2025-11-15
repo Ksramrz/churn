@@ -125,7 +125,11 @@ app.post('/cancellations', async (req, res) => {
       saved_flag = false,
       saved_by = null,
       save_reason = null,
-      save_notes = null
+      save_notes = null,
+      zoho_ticket_url = null,
+      churn_amount = null,
+      agent_plan = null,
+      saved_revenue = null
     } = req.body;
 
     if (!customer_id || !cancellation_date || !primary_reason) {
@@ -162,9 +166,13 @@ app.post('/cancellations', async (req, res) => {
           saved_flag,
           saved_by,
           save_reason,
-          save_notes
+        save_notes,
+        zoho_ticket_url,
+        churn_amount,
+        agent_plan,
+        saved_revenue
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
         )
         RETURNING id
       `,
@@ -182,7 +190,11 @@ app.post('/cancellations', async (req, res) => {
         saved_flag,
         saved_by,
         save_reason,
-        save_notes
+        save_notes,
+        zoho_ticket_url,
+        churn_amount,
+        agent_plan,
+        saved_revenue
       ]
     );
 
@@ -406,7 +418,11 @@ app.get('/exports/cancellations.csv', async (_req, res) => {
       closer: row.closer_name,
       cancellation_date: row.cancellation_date,
       primary_reason: row.primary_reason,
-      saved: row.saved_flag ? 'Yes' : 'No'
+      saved: row.saved_flag ? 'Yes' : 'No',
+      agent_plan: row.agent_plan,
+      churn_amount: row.churn_amount,
+      zoho_ticket_url: row.zoho_ticket_url,
+      saved_revenue: row.saved_revenue
     }));
 
     const csv = toCsv(csvRows);
@@ -433,7 +449,10 @@ app.get('/exports/saved-cases.csv', async (_req, res) => {
       saved_by: row.saved_by,
       save_reason: row.save_reason,
       save_notes: row.save_notes,
-      cancellation_date: row.cancellation_date
+      cancellation_date: row.cancellation_date,
+      agent_plan: row.agent_plan,
+      saved_revenue: row.saved_revenue,
+      zoho_ticket_url: row.zoho_ticket_url
     }));
 
     const csv = toCsv(csvRows);

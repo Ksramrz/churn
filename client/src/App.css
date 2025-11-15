@@ -2,42 +2,107 @@ body {
   background: radial-gradient(circle at top, #f8f5ff, #eef2ff 45%, #f5f6fb);
 }
 
-.app-shell {
-  padding: 2.5rem;
-  max-width: 1440px;
-  margin: 0 auto;
+.app-frame {
+  display: flex;
+  min-height: 100vh;
 }
 
-header {
+.sidebar {
+  width: 240px;
+  background: #1f1b2c;
+  color: #f8fafc;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.brand span {
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.brand small {
+  display: block;
+  color: rgba(248, 250, 252, 0.7);
+}
+
+.nav-link {
+  display: block;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  color: rgba(248, 250, 252, 0.9);
+  margin-bottom: 0.35rem;
+  text-decoration: none;
+}
+
+.nav-link.active,
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.main-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f5f6fb;
+}
+
+.topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  padding: 1.5rem 2rem 0.5rem;
 }
 
-header h1 {
-  margin: 0 0 0.25rem;
-  font-size: 2.2rem;
+.topbar h1 {
+  margin: 0;
+  font-size: 1.8rem;
   color: #0f172a;
 }
 
-header p {
-  margin: 0;
-  color: #475569;
+.topbar p {
+  margin: 0.25rem 0 0;
+  color: #64748b;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.content-shell {
+  flex: 1;
+  padding: 0 2rem 2rem;
+  overflow-y: auto;
+}
+
+.page-body {
+  max-width: 1420px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
 }
 
 .header-actions {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-}
-
-.layout {
-  display: grid;
-  grid-template-columns: minmax(340px, 380px) 1fr;
-  gap: 1.75rem;
-  align-items: start;
 }
 
 .search-bar input {
@@ -71,6 +136,12 @@ header p {
   font-size: 1.1rem;
 }
 
+.card-subtitle {
+  margin: 0.2rem 0 0;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -89,12 +160,21 @@ header p {
 .form-grid input,
 .form-grid textarea,
 .form-grid select {
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 0.55rem 0.75rem;
+  border: 1px solid #d4d9f5;
+  border-radius: 12px;
+  padding: 0.65rem 0.85rem;
   font-size: 0.95rem;
   font-family: inherit;
   background: #fbfbff;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-grid input:focus,
+.form-grid textarea:focus,
+.form-grid select:focus {
+  border-color: #7c3aed;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
 }
 
 .form-grid textarea {
@@ -109,6 +189,7 @@ header p {
 
 .combo-input input {
   width: 100%;
+  padding-right: 2.5rem;
 }
 
 .chip {
@@ -144,6 +225,12 @@ header p {
   position: absolute;
   right: 0.35rem;
   padding: 0.2rem 0.65rem;
+  border-radius: 50%;
+  min-width: 32px;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .suggestions {
@@ -277,6 +364,13 @@ button.ghost {
   font-size: 1.4rem;
 }
 
+.kpi span {
+  display: block;
+  margin-top: 0.15rem;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
 .top-reasons ol {
   margin: 0.4rem 0 0;
   padding-left: 1.25rem;
@@ -321,6 +415,11 @@ td {
   color: #0f172a;
 }
 
+.table-wrapper a {
+  color: #6c63ff;
+  text-decoration: underline;
+}
+
 .empty-state {
   text-align: center;
   color: #94a3b8;
@@ -337,32 +436,58 @@ td {
   margin-bottom: 0.5rem;
 }
 
+.pill-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+}
+
+.pill-list li {
+  padding: 0.4rem 0.85rem;
+  background: rgba(99, 102, 241, 0.12);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: #4338ca;
+}
+
+.banner + .banner {
+  margin-top: 0.5rem;
+}
+
 @media (max-width: 1100px) {
-  .layout {
-    grid-template-columns: 1fr;
+  .app-frame {
+    flex-direction: column;
   }
 
-  .card + .card {
-    margin-top: 1rem;
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
 }
 
 @media (max-width: 640px) {
-  .app-shell {
-    padding: 1.5rem;
-  }
-
-  header {
+  .topbar {
     flex-direction: column;
     align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .topbar-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .page-grid,
+  .settings-grid {
+    grid-template-columns: 1fr;
   }
 
   .form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .form-grid .full,
-  .form-actions {
-    grid-column: span 1;
   }
 }
