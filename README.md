@@ -14,7 +14,7 @@ Internal, test-environment tool for Roomvu operations teams to capture cancellat
 3. Ensure a Postgres database is available (local `postgresql://postgres:postgres@localhost:5432/roomvu`, Supabase, Render Managed Postgres, etc.).
    - Local quick start: `createdb roomvu` (macOS) or `docker run --name roomvu-pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16`.
 4. Set `DATABASE_URL` (e.g., `export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/roomvu`).
-5. Seed the database with Roomvu sample data: `npm run seed`
+5. (Optional) Seed demo data by running `SEED_DEMO_DATA=true npm run seed`. Without the env flag the script only ensures tables exist, keeping production/test databases clean.
 6. Start the API (default port 4000): `npm run dev`
 7. Key endpoints are documented inline in `server/src/index.js` (cancellations CRUD, stats, exports, insights, metadata).
 
@@ -33,7 +33,7 @@ Internal, test-environment tool for Roomvu operations teams to capture cancellat
 ---
 
 ### Using the Admin Portal
-- **Cancellation Intake Form:** Autocomplete existing customers, log usage metrics, mark saves, and capture save notes. Submissions POST to `/cancellations` and immediately refresh dashboard data.
+- **Cancellation Intake Form:** Start typing a customer name/email; pick an existing profile or fill the inline mini-profile (email, agent type, campaign, start date) to create a new customer on the fly. Log usage metrics, mark saves, and capture save notes—each submission POSTs to `/cancellations` and immediately refreshes dashboard data.
 - **Filters:** Date range, closer, segment, reason, and saved/not saved filters drive all list + chart panels for precise drill-down.
 - **Exports:** Three quick actions in the header hit `/exports/cancellations.csv`, `/exports/saved-cases.csv`, and `/exports/monthly-report.pdf`.
 
@@ -67,7 +67,7 @@ Internal, test-environment tool for Roomvu operations teams to capture cancellat
 ### Common Troubleshooting
 - **Port already in use:** Adjust `PORT` env variable before starting the server, or stop existing service on 4000.
 - **CORS errors in UI:** Ensure the backend is running locally; otherwise, set `VITE_API_BASE` to the reachable API URL.
-- **Missing customers in autocomplete:** Rerun `npm run seed` or insert new customers via Postgres, then refresh the UI.
+- **Missing customers in autocomplete:** Just type the new name + email in the intake form and fill the quick profile, or (optionally) run `SEED_DEMO_DATA=true npm run seed` to load the demo set.
 - **Charts look empty:** Filters may be overly restrictive. Use the “Clear” action in the filter card to reset.
 - **PDF export hangs:** Confirm the `/exports/monthly-report.pdf` endpoint is reachable; server logs will note any PDFKit issues.
 

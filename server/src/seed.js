@@ -141,6 +141,13 @@ const activityLogs = [
 const seed = async () => {
   await runMigrations();
 
+  const seedDemoData = process.env.SEED_DEMO_DATA === 'true';
+  if (!seedDemoData) {
+    console.log('SEED_DEMO_DATA not set to true. Skipping demo data population.');
+    console.log('Roomvu churn DB ready.');
+    return;
+  }
+
   const customerCountResult = await pool.query('SELECT COUNT(*)::int as count FROM customers');
   let hydratedCustomers = [];
 

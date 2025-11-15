@@ -48,6 +48,58 @@ const IntakePage = () => {
             )}
           </label>
 
+          {!formData.customer_id && (
+            <div className="fieldset full">
+              <div className="fieldset-header">
+                <div>
+                  <h4>New customer profile</h4>
+                  <p>Add the basics once and we will save the profile for future logs.</p>
+                </div>
+              </div>
+              <div className="fieldset-grid">
+                <label>
+                  Customer email
+                  <input
+                    type="email"
+                    value={formData.newCustomerEmail}
+                    onChange={(e) => handleFormChange('newCustomerEmail', e.target.value)}
+                    placeholder="agent@brokerage.com"
+                  />
+                </label>
+                <label>
+                  Agent type
+                  <select
+                    value={formData.newCustomerSegment}
+                    onChange={(e) => handleFormChange('newCustomerSegment', e.target.value)}
+                  >
+                    <option value="">Select</option>
+                    {options.agentTypes?.map((segment) => (
+                      <option key={segment} value={segment}>
+                        {segment}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Source campaign
+                  <input
+                    value={formData.newCustomerSource}
+                    onChange={(e) => handleFormChange('newCustomerSource', e.target.value)}
+                    placeholder="Referral, Paid ads, Webinar..."
+                  />
+                </label>
+                <label>
+                  Subscription start date
+                  <input
+                    type="date"
+                    value={formData.newCustomerStart}
+                    onChange={(e) => handleFormChange('newCustomerStart', e.target.value)}
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+
           <label>
             Zoho desk ticket
             <input

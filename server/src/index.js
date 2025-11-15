@@ -551,6 +551,42 @@ app.get('/exports/monthly-report.pdf', async (_req, res) => {
   }
 });
 
+app.post('/customers', async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      segment = null,
+      subscription_start_date = null,
+      source_campaign = null
+    } = req.body || {};
+
+    if (!name || !email) {
+      return res.status(400).json({ error: 'Customer name and email are required.' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const result = await pool.query(
+      `
+        INSERT INTO customers (name, email, segment, subscription_start_date, source_campaign)
+        VALUES ($1, $2, $3, $4, $5)
+        ON CONFLICT (email) DO UPDATE
+        SET name = EXCLUDED.name,
+            segment = EXCLUDED.segment,
+            subscription_start_date = EXCLUDED.subscription_start_date,
+            source_campaign = EXCLUDED.source_campaign
+        RETURNING *
+      `,
+      [name.trim(), normalizedEmail, segment || null, subscription_start_date || null, source_campaign || null]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Failed to create customer', error);
+    res.status(500).json({ error: 'Failed to create customer.' });
+  }
+});
+
 app.get('/customers', async (_req, res) => {
   try {
     const { rows } = await pool.query(

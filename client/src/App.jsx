@@ -64,7 +64,11 @@ const defaultForm = {
   churn_amount: '',
   agent_plan: BASE_PLANS[0],
   saved_revenue: '',
-  funds_disputed: false
+  funds_disputed: false,
+  newCustomerEmail: '',
+  newCustomerSegment: '',
+  newCustomerSource: '',
+  newCustomerStart: ''
 };
 
 const fetchJson = async (path, init) => {
@@ -182,6 +186,27 @@ function App() {
     loadAnalytics();
   }, [loadAnalytics]);
 
+  const createCustomer = useCallback(
+    async ({ name, email, segment, sourceCampaign, subscriptionStartDate }) => {
+      const payload = {
+        name: name.trim(),
+        email: email.trim(),
+        segment: segment || null,
+        source_campaign: sourceCampaign || null,
+        subscription_start_date: subscriptionStartDate || null
+      };
+
+      const newCustomer = await fetchJson('/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      setCustomers((prev) => [...prev, newCustomer]);
+      return newCustomer;
+    },
+    [setCustomers]
+  );
+
   const handleFilterChange = (field, value) => {
     setFilters((prev) => ({ ...prev, [field]: value }));
   };
@@ -191,7 +216,15 @@ function App() {
   };
 
   const clearCustomerSelection = () => {
-    setFormData((prev) => ({ ...prev, customer_id: '', customerLookup: '' }));
+    setFormData((prev) => ({
+      ...prev,
+      customer_id: '',
+      customerLookup: '',
+      newCustomerEmail: '',
+      newCustomerSegment: '',
+      newCustomerSource: '',
+      newCustomerStart: ''
+    }));
   };
 
   const handleCustomerInput = (value) => {
@@ -213,7 +246,11 @@ function App() {
     setFormData((prev) => ({
       ...prev,
       customer_id: customer.id,
-      customerLookup: `${customer.name} (${customer.email})`
+      customerLookup: `${customer.name} (${customer.email})`,
+      newCustomerEmail: '',
+      newCustomerSegment: '',
+      newCustomerSource: '',
+      newCustomerStart: ''
     }));
   };
 
@@ -230,20 +267,42 @@ function App() {
     setError('');
     setToast('');
 
-    if (!formData.customer_id) {
-      setError('Select a customer from the list to log a cancellation.');
-      return;
-    }
-
     if (!formData.primary_reason) {
       setError('Primary reason is required.');
       return;
     }
 
+    const hasExistingCustomer = Boolean(formData.customer_id);
+    const typedName = formData.customerLookup.trim();
+    const typedEmail = formData.newCustomerEmail.trim();
+
+    if (!hasExistingCustomer && !typedName) {
+      setError('Type the customer name or select an existing profile.');
+      return;
+    }
+
+    if (!hasExistingCustomer && !typedEmail) {
+      setError('Customer email is required for new profiles.');
+      return;
+    }
+
     setFormSubmitting(true);
     try {
+      let customerId = hasExistingCustomer ? Number(formData.customer_id) : null;
+
+      if (!customerId) {
+        const newCustomer = await createCustomer({
+          name: typedName,
+          email: typedEmail,
+          segment: formData.newCustomerSegment || null,
+          sourceCampaign: formData.newCustomerSource || null,
+          subscriptionStartDate: formData.newCustomerStart || null
+        });
+        customerId = newCustomer.id;
+      }
+
       const payload = {
-        customer_id: Number(formData.customer_id),
+        customer_id: Number(customerId),
         cancellation_date: formData.cancellation_date,
         primary_reason: formData.primary_reason,
         secondary_notes: formData.secondary_notes,
