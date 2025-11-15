@@ -4,3 +4,4 @@ client/dist/
 .env.*
 server/data/
 
+server/data/ # if it’s not already there
