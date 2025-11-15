@@ -23,6 +23,7 @@ const SavedCasesPage = () => {
     { label: 'Reason', accessor: 'save_reason' },
     { label: 'Saved $', accessor: 'saved_revenue_display' },
     { label: 'Ticket', accessor: 'ticket_link' },
+    { label: 'Disputed?', accessor: 'funds_disputed_display' },
     { label: 'Notes', accessor: 'save_notes' },
     { label: 'Date', accessor: 'cancellation_date' }
   ];
@@ -32,6 +33,7 @@ const SavedCasesPage = () => {
     save_reason: row.save_reason || '-',
     save_notes: row.save_notes || '-',
     saved_revenue_display: row.saved_revenue ? currency.format(row.saved_revenue) : '—',
+    funds_disputed_display: row.funds_disputed ? 'Yes' : 'No',
     ticket_link: row.zoho_ticket_url ? (
       <a href={row.zoho_ticket_url} target="_blank" rel="noreferrer">
         Ticket

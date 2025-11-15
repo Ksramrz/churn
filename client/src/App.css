@@ -192,6 +192,20 @@ body {
   padding-right: 2.5rem;
 }
 
+.inline-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.inline-form input {
+  flex: 1;
+}
+
+.inline-form button {
+  padding: 0.55rem 0.9rem;
+}
+
 .chip {
   border: none;
   border-radius: 999px;
@@ -393,6 +407,17 @@ button.ghost {
 
 .table-wrapper {
   overflow-x: auto;
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.table-actions .chip {
+  border-radius: 999px;
+  padding: 0.3rem 0.85rem;
 }
 
 table {

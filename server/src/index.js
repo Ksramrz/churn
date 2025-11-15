@@ -129,7 +129,8 @@ app.post('/cancellations', async (req, res) => {
       zoho_ticket_url = null,
       churn_amount = null,
       agent_plan = null,
-      saved_revenue = null
+      saved_revenue = null,
+      funds_disputed = false
     } = req.body;
 
     if (!customer_id || !cancellation_date || !primary_reason) {
@@ -170,9 +171,10 @@ app.post('/cancellations', async (req, res) => {
         zoho_ticket_url,
         churn_amount,
         agent_plan,
-        saved_revenue
+        saved_revenue,
+        funds_disputed
         ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
         )
         RETURNING id
       `,
@@ -194,7 +196,8 @@ app.post('/cancellations', async (req, res) => {
         zoho_ticket_url,
         churn_amount,
         agent_plan,
-        saved_revenue
+        saved_revenue,
+        funds_disputed
       ]
     );
 
@@ -204,6 +207,53 @@ app.post('/cancellations', async (req, res) => {
   } catch (error) {
     console.error('Failed to create cancellation', error);
     res.status(500).json({ error: 'Failed to create cancellation record.' });
+  }
+});
+
+app.patch('/cancellations/:id', async (req, res) => {
+  try {
+    const allowedFields = [
+      'saved_flag',
+      'saved_by',
+      'save_reason',
+      'save_notes',
+      'saved_revenue',
+      'zoho_ticket_url',
+      'churn_amount',
+      'agent_plan',
+      'funds_disputed'
+    ];
+
+    const updates = [];
+    const values = [];
+
+    allowedFields.forEach((field) => {
+      if (Object.prototype.hasOwnProperty.call(req.body, field)) {
+        updates.push(`${field} = $${updates.length + 1}`);
+        if (field === 'saved_flag' || field === 'funds_disputed') {
+          values.push(Boolean(req.body[field]));
+        } else {
+          values.push(req.body[field]);
+        }
+      }
+    });
+
+    if (!updates.length) {
+      return res.status(400).json({ error: 'No valid fields provided for update.' });
+    }
+
+    values.push(req.params.id);
+
+    await pool.query(`UPDATE cancellations SET ${updates.join(', ')} WHERE id = $${values.length}`, values);
+
+    const { rows } = await pool.query(`${baseCancellationSelect} WHERE can.id = $1`, [req.params.id]);
+    if (!rows.length) {
+      return res.status(404).json({ error: 'Cancellation not found after update.' });
+    }
+    res.json(mapCancellationRow(rows[0]));
+  } catch (error) {
+    console.error('Failed to update cancellation', error);
+    res.status(500).json({ error: 'Failed to update cancellation.' });
   }
 });
 
@@ -422,7 +472,8 @@ app.get('/exports/cancellations.csv', async (_req, res) => {
       agent_plan: row.agent_plan,
       churn_amount: row.churn_amount,
       zoho_ticket_url: row.zoho_ticket_url,
-      saved_revenue: row.saved_revenue
+      saved_revenue: row.saved_revenue,
+      funds_disputed: row.funds_disputed ? 'Yes' : 'No'
     }));
 
     const csv = toCsv(csvRows);
@@ -452,7 +503,8 @@ app.get('/exports/saved-cases.csv', async (_req, res) => {
       cancellation_date: row.cancellation_date,
       agent_plan: row.agent_plan,
       saved_revenue: row.saved_revenue,
-      zoho_ticket_url: row.zoho_ticket_url
+      zoho_ticket_url: row.zoho_ticket_url,
+      funds_disputed: row.funds_disputed ? 'Yes' : 'No'
     }));
 
     const csv = toCsv(csvRows);

@@ -12,7 +12,7 @@ import './App.css';
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 const palette = ['#6c63ff', '#ff7b72', '#fec260', '#2a9d8f', '#8ac926', '#ff595e', '#1982c4'];
 const defaultAgentTypes = ['Realtor', 'Mortgage Broker', 'Insurance Advisor', 'Financial Advisor'];
-const planOptions = [
+const BASE_PLANS = [
   'Basic Monthly',
   'Basic Yearly',
   'Premium Monthly',
@@ -62,8 +62,9 @@ const defaultForm = {
   save_notes: '',
   zoho_ticket_url: '',
   churn_amount: '',
-  agent_plan: planOptions[0],
-  saved_revenue: ''
+  agent_plan: BASE_PLANS[0],
+  saved_revenue: '',
+  funds_disputed: false
 };
 
 const fetchJson = async (path, init) => {
@@ -89,6 +90,13 @@ function App() {
     reasons: [],
     agentTypes: defaultAgentTypes
   });
+  const [planOptions, setPlanOptions] = useState(BASE_PLANS);
+  const [tempSettings, setTempSettings] = useState({
+    closers: [],
+    reasons: reasonPresets,
+    plans: BASE_PLANS,
+    agentTypes: defaultAgentTypes
+  });
   const [cancellations, setCancellations] = useState([]);
   const [overview, setOverview] = useState(null);
   const [reasonData, setReasonData] = useState({ overall: [], bySegment: {} });
@@ -111,11 +119,18 @@ function App() {
         ...metadata,
         agentTypes: metadata.agentTypes?.length ? metadata.agentTypes : defaultAgentTypes
       }));
+      setPlanOptions(BASE_PLANS);
+      setTempSettings({
+        closers: metadata.closers || [],
+        reasons: metadata.reasons?.length ? metadata.reasons : reasonPresets,
+        plans: BASE_PLANS,
+        agentTypes: metadata.agentTypes?.length ? metadata.agentTypes : defaultAgentTypes
+      });
       setCustomers(customerList);
       setFormData((prev) => ({
         ...prev,
         closer_name: metadata.closers?.[0] || '',
-        agent_plan: planOptions[0]
+        agent_plan: BASE_PLANS[0]
       }));
     };
 
@@ -244,7 +259,8 @@ function App() {
         zoho_ticket_url: formData.zoho_ticket_url || null,
         churn_amount: formData.churn_amount ? Number(formData.churn_amount) : null,
         agent_plan: formData.agent_plan || null,
-        saved_revenue: formData.saved_revenue ? Number(formData.saved_revenue) : null
+        saved_revenue: formData.saved_revenue ? Number(formData.saved_revenue) : null,
+        funds_disputed: Boolean(formData.funds_disputed)
       };
 
       await fetchJson('/cancellations', {
@@ -268,6 +284,20 @@ function App() {
     window.open(`${API_BASE}${path}`, '_blank', 'noopener');
   };
 
+  const updateCancellation = async (id, updates) => {
+    try {
+      await fetchJson(`/cancellations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      setToast('Cancellation updated.');
+      loadAnalytics();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const contextValue = {
     API_BASE,
     palette,
@@ -283,6 +313,7 @@ function App() {
     closerStats,
     cancellations,
     savedCases,
+    tempSettings,
     loading,
     error,
     toast,
@@ -299,7 +330,11 @@ function App() {
     resetForm,
     setError,
     setToast,
-    handleExport
+    handleExport,
+    updateCancellation,
+    setTempSettings,
+    setOptions,
+    setPlanOptions
   };
 
   return (

@@ -42,7 +42,8 @@ const mapCancellationRow = (row) => ({
   zoho_ticket_url: row.zoho_ticket_url,
   churn_amount: row.churn_amount,
   agent_plan: row.agent_plan,
-  saved_revenue: row.saved_revenue
+  saved_revenue: row.saved_revenue,
+  funds_disputed: Boolean(row.funds_disputed)
 });
 
 const toCsv = (rows) => {

@@ -31,7 +31,8 @@ const DashboardPage = () => {
     cancellations,
     loading,
     palette,
-    handleExport
+    handleExport,
+    updateCancellation
   } = useAppContext();
 
   const currency = useMemo(
@@ -73,6 +74,21 @@ const DashboardPage = () => {
     Losses: closer.cancellations
   }));
 
+  const handleSavedToggle = (row) => {
+    const payload = row.saved_flag
+      ? { saved_flag: false }
+      : {
+          saved_flag: true,
+          saved_by: row.saved_by || row.closer_name,
+          save_reason: row.save_reason || 'Saved via dashboard'
+        };
+    updateCancellation(row.id, payload);
+  };
+
+  const handleDisputeToggle = (row) => {
+    updateCancellation(row.id, { funds_disputed: !row.funds_disputed });
+  };
+
   const cancellationColumns = [
     { label: 'Customer', accessor: 'customer_name' },
     { label: 'Agent type', accessor: 'segment' },
@@ -81,8 +97,10 @@ const DashboardPage = () => {
     { label: 'Reason', accessor: 'primary_reason' },
     { label: 'Churn $', accessor: 'churn_amount_display' },
     { label: 'Saved $', accessor: 'saved_revenue_display' },
+    { label: 'Saved?', accessor: 'saved_flag_display' },
+    { label: 'Disputed?', accessor: 'funds_disputed_display' },
     { label: 'Zoho ticket', accessor: 'ticket_link' },
-    { label: 'Saved', accessor: 'saved_flag_display' },
+    { label: 'Actions', accessor: 'action_buttons' },
     { label: 'Date', accessor: 'cancellation_date' },
     { label: 'Days on platform', accessor: 'days_on_platform' }
   ];
@@ -90,6 +108,7 @@ const DashboardPage = () => {
   const cancellationRows = cancellations.map((row) => ({
     ...row,
     saved_flag_display: row.saved_flag ? 'Yes' : 'No',
+    funds_disputed_display: row.funds_disputed ? 'Yes' : 'No',
     churn_amount_display: row.churn_amount ? currency.format(row.churn_amount) : '—',
     saved_revenue_display: row.saved_revenue ? currency.format(row.saved_revenue) : '—',
     ticket_link: row.zoho_ticket_url ? (
@@ -98,6 +117,16 @@ const DashboardPage = () => {
       </a>
     ) : (
       '—'
+    ),
+    action_buttons: (
+      <div className="table-actions">
+        <button className="chip ghost" onClick={() => handleSavedToggle(row)}>
+          {row.saved_flag ? 'Mark lost' : 'Mark saved'}
+        </button>
+        <button className="chip ghost" onClick={() => handleDisputeToggle(row)}>
+          {row.funds_disputed ? 'Clear dispute' : 'Flag dispute'}
+        </button>
+      </div>
     )
   }));
 
@@ -175,6 +204,14 @@ const DashboardPage = () => {
             </select>
           </label>
         </div>
+      </Card>
+
+      <Card title="Insights" subtitle="Top observations based on current filters">
+        <ul className="insights">
+          {overview?.insights?.map((insight, index) => (
+            <li key={index}>{insight}</li>
+          )) || <li>Insights will appear once data loads.</li>}
+        </ul>
       </Card>
 
       <Card title="Key metrics">

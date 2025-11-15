@@ -54,7 +54,8 @@ const cancellationTemplates = [
     saved_flag: 0,
     agent_plan: 'Premium Monthly',
     churn_amount: 149,
-    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1000'
+    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1000',
+    funds_disputed: false
   },
   {
     customerIndex: 1,
@@ -73,7 +74,8 @@ const cancellationTemplates = [
     agent_plan: 'Basic Monthly',
     churn_amount: 79,
     saved_revenue: 59,
-    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1001'
+    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1001',
+    funds_disputed: true
   },
   {
     customerIndex: 2,
@@ -87,7 +89,8 @@ const cancellationTemplates = [
     closer_name: 'Marcus Lee',
     saved_flag: 0,
     agent_plan: 'Premium Yearly',
-    churn_amount: 899
+    churn_amount: 899,
+    funds_disputed: false
   },
   {
     customerIndex: 3,
@@ -102,7 +105,8 @@ const cancellationTemplates = [
     saved_flag: 0,
     agent_plan: 'Diamond 6 Month',
     churn_amount: 1299,
-    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1002'
+    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1002',
+    funds_disputed: true
   },
   {
     customerIndex: 4,
@@ -121,7 +125,8 @@ const cancellationTemplates = [
     agent_plan: 'Platinum Yearly',
     churn_amount: 1599,
     saved_revenue: 800,
-    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1003'
+    zoho_ticket_url: 'https://desk.zoho.com/ticket/RV-1003',
+    funds_disputed: false
   }
 ];
 
@@ -202,9 +207,10 @@ const seed = async () => {
             zoho_ticket_url,
             churn_amount,
             agent_plan,
-            saved_revenue
+            saved_revenue,
+            funds_disputed
           ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19
           )
         `,
         [
@@ -225,7 +231,8 @@ const seed = async () => {
           template.zoho_ticket_url || null,
           template.churn_amount || null,
           template.agent_plan || 'Basic Monthly',
-          template.saved_revenue || null
+          template.saved_revenue || null,
+          Boolean(template.funds_disputed)
         ]
       );
     }

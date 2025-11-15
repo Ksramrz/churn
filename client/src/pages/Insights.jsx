@@ -18,8 +18,8 @@ const InsightsPage = () => {
       </Card>
       <Card title="Playbook notes" subtitle="COMING SOON">
         <p className="empty-state">
-          Manual insight curation, tagging, and sharing will live here so ops leads can add context
-          to the automated findings.
+          Manual insight curation, tagging, and sharing will live here so ops leads can add context to the automated
+          findings.
         </p>
       </Card>
     </div>
@@ -27,4 +27,3 @@ const InsightsPage = () => {
 };
 
 export default InsightsPage;
-

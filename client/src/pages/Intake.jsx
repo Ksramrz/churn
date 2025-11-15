@@ -58,6 +58,15 @@ const IntakePage = () => {
             />
           </label>
 
+          <label className="toggle">
+            <input
+              type="checkbox"
+              checked={formData.funds_disputed}
+              onChange={(e) => handleFormChange('funds_disputed', e.target.checked)}
+            />
+            Funds disputed?
+          </label>
+
           <label>
             Agent plan
             <select value={formData.agent_plan} onChange={(e) => handleFormChange('agent_plan', e.target.value)}>
